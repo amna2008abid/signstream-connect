@@ -270,9 +270,9 @@
   .bubble {
     position: absolute;
     left: clamp(0.5rem, 2%, 1.25rem);
-    bottom: clamp(0.5rem, 3%, 1.5rem);
+    bottom: clamp(0.75rem, 4%, 2rem);
     display: flex;
-    flex-direction: column;
+    flex-direction: column-reverse;
     align-items: center;
     gap: 0.5rem;
     z-index: 5;
