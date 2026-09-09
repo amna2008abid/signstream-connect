@@ -53,9 +53,14 @@ function Index() {
   const [time, setTime] = useState(0);
   const [playing, setPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const ytRef = useRef<{ seek: (t: number) => void } | null>(null);
 
   const handleTime = useCallback((t: number) => setTime(t), []);
   const handlePlaying = useCallback((p: boolean) => setPlaying(p), []);
+  const handleReady = useCallback((api: { seek: (t: number) => void }) => {
+    ytRef.current = api;
+  }, []);
+
 
   useEffect(() => {
     return () => {
@@ -120,8 +125,10 @@ function Index() {
       videoRef.current.currentTime = t;
       void videoRef.current.play();
     }
+    ytRef.current?.seek(t);
     setTime(t);
   }
+
 
   return (
     <main className="min-h-screen hero-bg">
@@ -201,7 +208,13 @@ function Index() {
         <section className="mx-auto grid max-w-6xl gap-6 px-5 pb-16 lg:grid-cols-[1.5fr_1fr]">
           <div className="stage-wrap">
             {videoId ? (
-              <YouTubeStage videoId={videoId} onTime={handleTime} onPlaying={handlePlaying} />
+              <YouTubeStage
+                videoId={videoId}
+                onTime={handleTime}
+                onPlaying={handlePlaying}
+                onReady={handleReady}
+              />
+
             ) : (
               <div className="player">
                 <video

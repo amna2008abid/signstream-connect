@@ -4,7 +4,9 @@ type Props = {
   videoId: string;
   onTime: (t: number) => void;
   onPlaying: (p: boolean) => void;
+  onReady?: (api: { seek: (t: number) => void }) => void;
 };
+
 
 declare global {
   interface Window {
@@ -30,7 +32,7 @@ function loadApi(): Promise<any> {
   });
 }
 
-export function YouTubeStage({ videoId, onTime, onPlaying }: Props) {
+export function YouTubeStage({ videoId, onTime, onPlaying, onReady }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -44,6 +46,14 @@ export function YouTubeStage({ videoId, onTime, onPlaying }: Props) {
         videoId,
         playerVars: { rel: 0, modestbranding: 1 },
         events: {
+          onReady: () => {
+            onReady?.({
+              seek: (t: number) => {
+                player?.seekTo?.(t, true);
+                player?.playVideo?.();
+              },
+            });
+          },
           onStateChange: (e: any) => {
             const playing = e.data === YT.PlayerState.PLAYING;
             onPlaying(playing);
@@ -56,6 +66,7 @@ export function YouTubeStage({ videoId, onTime, onPlaying }: Props) {
         }
       }, 120);
     });
+
 
     return () => {
       cancelled = true;

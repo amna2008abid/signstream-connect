@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import robot from "@/assets/robot-signer.png";
-import { activeSegment, activeTokenIndex, type SignSegment } from "@/lib/asl";
+import { activeSegment, type SignSegment } from "@/lib/asl";
+import { HANDSHAPES, activeFrameIndex, buildHandFrames } from "@/lib/handshapes";
 
 type Props = {
   segments: SignSegment[];
@@ -11,34 +12,37 @@ type Props = {
 /** Round interpreter bubble that overlays the video's left corner. */
 export function SignStage({ segments, time, playing }: Props) {
   const seg = useMemo(() => activeSegment(segments, time), [segments, time]);
-  const idx = activeTokenIndex(seg, time);
-  const token = seg && idx >= 0 ? seg.tokens[idx] : null;
-  const signing = playing && Boolean(token);
+  const frames = useMemo(() => buildHandFrames(seg), [seg]);
+  const fi = activeFrameIndex(frames, time);
+  const frame = fi >= 0 ? frames[fi] : undefined;
+  const hand = frame?.letter ? HANDSHAPES[frame.letter] : undefined;
+  const signing = playing && Boolean(frame);
 
   return (
     <div className="bubble" aria-label="Sign language interpreter">
       <div className={`bubble-ring ${signing ? "is-live" : ""}`}>
-        <img
-          src={robot}
-          alt="Robot interpreter signing in American Sign Language"
-          width={1024}
-          height={1024}
-          className={signing ? "is-signing" : ""}
-        />
+        <img className="bubble-robot" src={robot} alt="" aria-hidden />
+        {hand && frame ? (
+          <img
+            key={`${fi}-${frame.letter}`}
+            className="bubble-hand"
+            src={hand}
+            alt={`Hand shape for the letter ${frame.letter}`}
+          />
+        ) : (
+          <div className="bubble-rest" aria-hidden />
+        )}
       </div>
+
       <div className="bubble-caption" aria-live="polite">
-        {token ? (
-          token.fingerspell ? (
-            <span className="bubble-spell">
-              {token.gloss.split("").map((c, i) => (
-                <span key={i} className="bubble-letter">
-                  {c}
-                </span>
-              ))}
-            </span>
-          ) : (
-            <span className="bubble-gloss">{token.gloss}</span>
-          )
+        {frame ? (
+          <span className="bubble-gloss">
+            {frame.gloss.split("").map((ch, i) => (
+              <span key={i} className={i === frame.pos ? "bubble-now" : undefined}>
+                {ch}
+              </span>
+            ))}
+          </span>
         ) : (
           <span className="bubble-gloss bubble-idle">
             {segments.length ? "▶ press play" : "…"}
